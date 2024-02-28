@@ -79,10 +79,10 @@ async def create_processed_agent_data(data: List[ProcessedAgentData]):
                       longitude=item.agent_data.gps.longitude,
                       timestamp=item.agent_data.timestamp
                 )
-
+                # Insert data to database
                 result = db.execute(dat)
                 db.commit()
-                
+                # Send data to subscribers
                 await send_data_to_subscribers(item.agent_data.user_id, result)
             except Exception as e:
                 db.rollback()
@@ -95,6 +95,7 @@ async def create_processed_agent_data(data: List[ProcessedAgentData]):
 )
 def read_processed_agent_data(processed_agent_data_id: int):
     with SessionLocal() as db:
+        # Get data by id
         dat = select(processed_agent_data).where(processed_agent_data.c.id == processed_agent_data_id)
         result = db.execute(dat).fetchone()
 
@@ -107,6 +108,7 @@ def read_processed_agent_data(processed_agent_data_id: int):
 @app.get("/processed_agent_data/", response_model=list[ProcessedAgentDataInDB])
 def list_processed_agent_data():
     with SessionLocal() as db:
+        # Get list of data
         dat = select(processed_agent_data)
         results = db.execute(dat).fetchall()
 
@@ -119,6 +121,7 @@ def list_processed_agent_data():
 )
 def update_processed_agent_data(processed_agent_data_id: int, data: ProcessedAgentData):
     with SessionLocal() as db:
+        # Update data
         dat = update(processed_agent_data).where(processed_agent_data.c.id == processed_agent_data_id).values(
             road_state=data.road_state,
             user_id=data.agent_data.user_id,
@@ -157,6 +160,7 @@ def delete_processed_agent_data(processed_agent_data_id: int):
         if result is None:
             raise HTTPException(status_code=404, detail="ProcessedAgentData not found")
 
+        # Delete by id
         dat = delete(processed_agent_data).where(processed_agent_data.c.id == processed_agent_data_id)
 
         db.execute(dat)
